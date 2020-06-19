@@ -38,11 +38,10 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
- * Vers„o nova de POIUtil.
- * Principal alteraÁ„o -> EdiÁ„o de cÈlulas/regiıes via String. Ex: "A1:B1"
+ * Vers√£o nova de POIUtil.
+ * Principal altera√ß√£o -> Edi√ß√£o de c√©lulas/regi√µes via String. Ex: "A1:B1"
  * 
  * Exemplo de uso no main
- * @author p067613 - 19/06/2020
  *
  */
 public class POIUtil2 implements Serializable {
@@ -80,7 +79,7 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Inicializa um workbook atravÈs do path. Utiliza FileInputStream que È fechada
+	 * Inicializa um workbook atrav√©s do path. Utiliza FileInputStream que √© fechada
 	 * no finally
 	 * 
 	 * @param path (String) - caminho do excel
@@ -110,7 +109,7 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Escreve excel atravÈs do FileOutputStream com o caminho informado.
+	 * Escreve excel atrav√©s do FileOutputStream com o caminho informado.
 	 * FileOutputStream e workbook fechados no finally
 	 * 
 	 * @param path (String) - caminho destino para escrever excel
@@ -164,8 +163,8 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Configura todas as fÛrmulas criadas nas cÈlulas. … chamado automaticamente
-	 * nos mÈtodos write().
+	 * Configura todas as f√≥rmulas criadas nas c√©lulas. √â chamado automaticamente
+	 * nos m√©todos write().
 	 * @return PoiUtil
 	 */
 	public POIUtil2 evaluateAllFormulas() {
@@ -194,7 +193,7 @@ public class POIUtil2 implements Serializable {
 	
 	/**
 	 * Download do workbook como .xlsx
-	 * @param fileName (String) - nome do arquivo. Caso n„o possua o .xlsx ser· inserido.
+	 * @param fileName (String) - nome do arquivo. Caso n√£o possua o .xlsx ser√° inserido.
 	 * @throws IOException 
 	 */
 	public void download(String fileName) throws IOException {
@@ -220,7 +219,7 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Fecha o workbook. … fechado automaticamente nÛs metodos write()
+	 * Fecha o workbook. √â fechado automaticamente n√≥s metodos write()
 	 * 
 	 * @throws IOException
 	 */
@@ -241,9 +240,9 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Retorna folha da posiÁ„o informada.
+	 * Retorna folha da posi√ß√£o informada.
 	 * 
-	 * @param index (int) - PosiÁ„o da folha. Base 0
+	 * @param index (int) - Posi√ß√£o da folha. Base 0
 	 * @return XSSFSheet
 	 */
 	public XSSFSheet getSheetAt(final int index) {
@@ -251,8 +250,8 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Configura folha para padr„o
-	 * @param index (int) - Õndice (base 0) da folha
+	 * Configura folha para padr√£o
+	 * @param index (int) - √çndice (base 0) da folha
 	 * @return PoiUtil
 	 */
 	public POIUtil2 setActiveSheet(final int index) {
@@ -281,11 +280,11 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Cria uma nova ·rea mesclada
+	 * Cria uma nova √°rea mesclada
 	 * 
 	 * @param sheet    (XSSFSheet) - folha a ser alterada
-	 * @param regioes (String...) - regiıes a serem mescladas (separadas por vÌrgula). Ex: "A1:F10","B5:G30"...
-	 * @throws Exception - regiıes inv·lidas 
+	 * @param regioes (String...) - regi√µes a serem mescladas (separadas por v√≠rgula). Ex: "A1:F10","B5:G30"...
+	 * @throws Exception - regi√µes inv√°lidas 
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createMergedRegions(final XSSFSheet sheet, final String... regioes) throws Exception {
@@ -301,12 +300,12 @@ public class POIUtil2 implements Serializable {
 	// CELL
 
 	/**
-	 * Cria cÈlula
+	 * Cria c√©lula
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D1 (criar· cÈlulas de A1 atÈ D1 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso linha n„o exista
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D1 (criar√° c√©lulas de A1 at√© D1 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso linha n√£o exista
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCells(final XSSFSheet sheet, final String... celulasRegioes) throws Exception {
@@ -335,13 +334,13 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Cria cÈlula configurada com estilo informado
+	 * Cria c√©lula configurada com estilo informado
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo adicionado no map de estilos -> createCellStyle().
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D1 (criar· cÈlulas de A1 atÈ D1 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso linha ou estilo n„o existam
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D1 (criar√° c√©lulas de A1 at√© D1 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso linha ou estilo n√£o existam
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final String... celulasRegioes) throws Exception {
@@ -370,14 +369,14 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Cria cÈlula configurada com estilo e valor String informados
+	 * Cria c√©lula configurada com estilo e valor String informados
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo adicionado no map de estilos -> createCellStyle().
-	 * @param cellValue (String) - valor em String para a cÈlula
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D1 (criar· cÈlulas de A1 atÈ D1 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso linha ou estilo n„o existam ou valor n„o tenha sido informado
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param cellValue (String) - valor em String para a c√©lula
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D1 (criar√° c√©lulas de A1 at√© D1 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso linha ou estilo n√£o existam ou valor n√£o tenha sido informado
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final String cellValue, final String... celulasRegioes) throws Exception {
@@ -410,14 +409,14 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Cria cÈlula configurada com estilo e valor long informados
+	 * Cria c√©lula configurada com estilo e valor long informados
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo adicionado no map de estilos -> createCellStyle().
-	 * @param cellValue (long) - valor em long para a cÈlula
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D1 (criar· cÈlulas de A1 atÈ D1 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso linha ou estilo n„o existam
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param cellValue (long) - valor em long para a c√©lula
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D1 (criar√° c√©lulas de A1 at√© D1 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso linha ou estilo n√£o existam
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final long cellValue, final String... celulasRegioes) throws Exception {
@@ -450,14 +449,14 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Cria cÈlula configurada com estilo e valor long informados
+	 * Cria c√©lula configurada com estilo e valor long informados
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo adicionado no map de estilos -> createCellStyle().
-	 * @param cellValue (int) - valor em int para a cÈlula
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D1 (criar· cÈlulas de A1 atÈ D1 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso linha ou estilo n„o existam
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param cellValue (int) - valor em int para a c√©lula
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D1 (criar√° c√©lulas de A1 at√© D1 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso linha ou estilo n√£o existam
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final int cellValue, final String... celulasRegioes) throws Exception {
@@ -490,14 +489,14 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Cria cÈlula configurada com estilo e valor long informados
+	 * Cria c√©lula configurada com estilo e valor long informados
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo adicionado no map de estilos -> createCellStyle().
-	 * @param cellValue (double) - valor em double para a cÈlula
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D1 (criar· cÈlulas de A1 atÈ D1 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso linha ou estilo n„o existam
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param cellValue (double) - valor em double para a c√©lula
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D1 (criar√° c√©lulas de A1 at√© D1 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso linha ou estilo n√£o existam
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final double cellValue, final String... celulasRegioes) throws Exception {
@@ -530,13 +529,13 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Configura em string o valor da cÈlula
+	 * Configura em string o valor da c√©lula
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param value (String) - valor a ser configurado na cÈlula
-	 * @param celula (String) - cÈlula a ser configurada. Ex: "A1"
-	 * @throws NullPointerException - caso linha ou cÈlula n„o existam ou valor seja null
-	 * @throws Exception - caso cÈlula informada seja inv·lida 
+	 * @param value (String) - valor a ser configurado na c√©lula
+	 * @param celula (String) - c√©lula a ser configurada. Ex: "A1"
+	 * @throws NullPointerException - caso linha ou c√©lula n√£o existam ou valor seja null
+	 * @throws Exception - caso c√©lula informada seja inv√°lida 
 	 * @return PoiUtil
 	 */
 	public POIUtil2 setCellValue(final XSSFSheet sheet, final String value, final String celula) throws Exception {
@@ -547,14 +546,14 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Configura em string o valor da cÈlula e seu estilo
+	 * Configura em string o valor da c√©lula e seu estilo
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo
-	 * @param value (String) - valor a ser configurado na cÈlula
-	 * @param celula (String) - cÈlula a ser configurada. Ex: "A1"
-	 * @throws NullPointerException - caso linha,cÈlula ou estilo n„o existam ou valor seja null
-	 * @throws Exception - caso cÈlula informada seja inv·lida
+	 * @param value (String) - valor a ser configurado na c√©lula
+	 * @param celula (String) - c√©lula a ser configurada. Ex: "A1"
+	 * @throws NullPointerException - caso linha,c√©lula ou estilo n√£o existam ou valor seja null
+	 * @throws Exception - caso c√©lula informada seja inv√°lida
 	 * @return PoiUtil
 	 */
 	public POIUtil2 setCellValue(final XSSFSheet sheet, final String cellStyleName,final String value, final String celula) throws Exception {
@@ -567,13 +566,13 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Configura em double o valor da cÈlula
+	 * Configura em double o valor da c√©lula
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param value (String) - valor a ser configurado na cÈlula
-	 * @param celula (String) - cÈlula a ser configurada. Ex: "A1"
-	 * @throws NullPointerException - caso linha ou cÈlula n„o existam
-	 * @throws Exception - caso cÈlula informada seja inv·lida
+	 * @param value (String) - valor a ser configurado na c√©lula
+	 * @param celula (String) - c√©lula a ser configurada. Ex: "A1"
+	 * @throws NullPointerException - caso linha ou c√©lula n√£o existam
+	 * @throws Exception - caso c√©lula informada seja inv√°lida
 	 * @return PoiUtil
 	 */
 	public POIUtil2 setCellValue(final XSSFSheet sheet, final double value, final String celula) throws Exception {
@@ -584,14 +583,14 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Configura em double o valor da cÈlula e seu estilo
+	 * Configura em double o valor da c√©lula e seu estilo
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
 	 * @param cellStyleName (String) - nome do estilo
-	 * @param value (String) - valor a ser configurado na cÈlula
-	 * @param celula (String) - cÈlula a ser configurada. Ex: "A1"
-	 * @throws NullPointerException - caso linha,cÈlula,estilo n„o existam
-	 * @throws Exception - caso cÈlula informada seja inv·lida
+	 * @param value (String) - valor a ser configurado na c√©lula
+	 * @param celula (String) - c√©lula a ser configurada. Ex: "A1"
+	 * @throws NullPointerException - caso linha,c√©lula,estilo n√£o existam
+	 * @throws Exception - caso c√©lula informada seja inv√°lida
 	 * @return PoiUtil
 	 */
 	public POIUtil2 setCellValue(final XSSFSheet sheet, final String cellStyleName,final double value, final String celula) throws Exception {
@@ -604,12 +603,12 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Retorna cÈlula. Retorna nulo caso cÈlula n„o exista
+	 * Retorna c√©lula. Retorna nulo caso c√©lula n√£o exista
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param celula (String) - cÈlula a ser configurada. Ex: "A1"
-	 * @throws NullPointerException - caso linha n„o exista
-	 * @throws Exception - caso cÈlula informada seja inv·lida
+	 * @param celula (String) - c√©lula a ser configurada. Ex: "A1"
+	 * @throws NullPointerException - caso linha n√£o exista
+	 * @throws Exception - caso c√©lula informada seja inv√°lida
 	 * @return XSSFCell
 	 */
 	public XSSFCell getCell(final XSSFSheet sheet, final String celula) throws Exception {
@@ -624,7 +623,7 @@ public class POIUtil2 implements Serializable {
 	 * Cria linha
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param row   (int) - n˙mero da linha a ser criada. Base 0
+	 * @param row   (int) - n√∫mero da linha a ser criada. Base 0
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createRow(final XSSFSheet sheet, final int row) {
@@ -647,10 +646,10 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Retorna linha. Retorna nulo caso n„o exista.
+	 * Retorna linha. Retorna nulo caso n√£o exista.
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param row   (int) - n˙mero da linha a retornar. Base 0
+	 * @param row   (int) - n√∫mero da linha a retornar. Base 0
 	 * @return XSSFRow
 	 */
 	public XSSFRow getRow(final XSSFSheet sheet, final int row) {
@@ -675,9 +674,9 @@ public class POIUtil2 implements Serializable {
 	 * @param name (String) - key no hashmap
 	 * @param font (String) - key da fonte no HashMap<String,XSSFFont>
 	 * @param hAlign (HorizontalAlignment) - alinhameto horizontal texto
-	 * @param vAlign (VerticalAlignment) - posialinhametoÁ„o vertical texto
-	 * @param fill (FillPatternType) - padr„o de preenchimento do background
-	 * @param indexedColor (IndexedColors) - Ìndice da cor de preenchimento
+	 * @param vAlign (VerticalAlignment) - posialinhameto√ß√£o vertical texto
+	 * @param fill (FillPatternType) - padr√£o de preenchimento do background
+	 * @param indexedColor (IndexedColors) - √≠ndice da cor de preenchimento
 	 * @param borders - (BorderStyle...) - array de bordas -> Top, Right, Bottom, Left 
 	 * @return
 	 */
@@ -698,7 +697,7 @@ public class POIUtil2 implements Serializable {
 
 	/**
 	 * Retorna XSSFCellStyle armazenado no HashMap pela key nome. Retorna nulo caso
-	 * n„o exista
+	 * n√£o exista
 	 * 
 	 * @param nome (String) - nome chave do estilo no HashMap
 	 * @return XSSFCellStyle
@@ -710,14 +709,14 @@ public class POIUtil2 implements Serializable {
 	/**
 	 * Edita borda do estilo contido no HashMap.
 	 * 
-	 * @param cellStyleName (String) - nome chave da cÈlula
-	 * @param borderTop     (BorderStyle) - borda topo. Passe nulo para n„o setar
-	 * @param borderRight   (BorderStyle) - borda direita. Passe nulo para n„o setar
-	 * @param borderBottom  (BorderStyle) - borda inferior. Passe nulo para n„o
+	 * @param cellStyleName (String) - nome chave da c√©lula
+	 * @param borderTop     (BorderStyle) - borda topo. Passe nulo para n√£o setar
+	 * @param borderRight   (BorderStyle) - borda direita. Passe nulo para n√£o setar
+	 * @param borderBottom  (BorderStyle) - borda inferior. Passe nulo para n√£o
 	 *                      setar
-	 * @param borderLeft    (BorderStyle) - borda esquerda. Passe nulo para n„o
+	 * @param borderLeft    (BorderStyle) - borda esquerda. Passe nulo para n√£o
 	 *                      setar
-	 * @throws NullPointerException - caso estilo n„o exista
+	 * @throws NullPointerException - caso estilo n√£o exista
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editCellStyleBorder(final String cellStyleName, final BorderStyle borderTop,
@@ -742,9 +741,9 @@ public class POIUtil2 implements Serializable {
 	/**
 	 * Edita todas as bordas do estilo contido no HashMap.
 	 * 
-	 * @param cellStyleName (String) - nome chave da cÈlula
+	 * @param cellStyleName (String) - nome chave da c√©lula
 	 * @param borderTop     (BorderStyle) - Tipo de borda
-	 * @throws NullPointerException - caso estilo n„o exista
+	 * @throws NullPointerException - caso estilo n√£o exista
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editCellStyleBorderAll(final String cellStyleName, final BorderStyle border) {
@@ -762,7 +761,7 @@ public class POIUtil2 implements Serializable {
 	 * 
 	 * @param cellStyleName (String) - nome chave da fonte no HashMap
 	 * @param fontName      (String) - nome da fonte para o documento
-	 * @throws NullPointerException - caso estilo n„o exista
+	 * @throws NullPointerException - caso estilo n√£o exista
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editCellStyleFont(final String cellStyleName, final String fontName) {
@@ -773,14 +772,14 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Edita o alinhamento horizontal e vertical da cÈlula
+	 * Edita o alinhamento horizontal e vertical da c√©lula
 	 * 
 	 * @param cellStyleName       (String) - nome chave da fonte no HashMap
 	 * @param horizontalAlignment (HorizontalAlignment) - alinhamento horizontal.
-	 *                            Passe null para n„o setar
+	 *                            Passe null para n√£o setar
 	 * @param verticalAlignment   (VerticalAlignment) - alinhamento vertical. Passe
-	 *                            null para n„o setar
-	 * @throws NullPointerException - caso estilo n„o exista
+	 *                            null para n√£o setar
+	 * @throws NullPointerException - caso estilo n√£o exista
 	 * @return
 	 */
 	public POIUtil2 editCellStyleAlignment(final String cellStyleName, final HorizontalAlignment horizontalAlignment,
@@ -797,7 +796,7 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Configura se h· quebra de texto no estilo
+	 * Configura se h√° quebra de texto no estilo
 	 * 
 	 * @param cellStyleName (String) - nome chave da fonte no HashMap
 	 * @param wrap          (boolean) - se texto deve quebrar
@@ -809,10 +808,10 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Configura padr„o de preenchimento do estilo
+	 * Configura padr√£o de preenchimento do estilo
 	 * 
 	 * @param cellStyleName (String) - nome chave da fonte no HashMap
-	 * @param fillPattern   (FillPatternType) - padr„o de preenchimento
+	 * @param fillPattern   (FillPatternType) - padr√£o de preenchimento
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editCellStyleFillPattern(final String cellStyleName, final FillPatternType fillPattern) {
@@ -851,11 +850,11 @@ public class POIUtil2 implements Serializable {
 	// ROW CELL
 
 	/**
-	 * Cria linhas e cÈlulas
+	 * Cria linhas e c√©lulas
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D5 (criar· cÈlulas e linhas de A1 atÈ D5 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D5 (criar√° c√©lulas e linhas de A1 at√© D5 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createRowCell(final XSSFSheet sheet, final String... celulasRegioes) throws Exception{
@@ -885,12 +884,12 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Cria linhas e cÈlulas e configura estilo nas cÈlulas
+	 * Cria linhas e c√©lulas e configura estilo nas c√©lulas
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem criadas. Ex: A1 ou A1:D5 (criar· cÈlulas e linhas de A1 atÈ D5 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso estilo n„o exista
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem criadas. Ex: A1 ou A1:D5 (criar√° c√©lulas e linhas de A1 at√© D5 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso estilo n√£o exista
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createRowCellStyle(final XSSFSheet sheet, final String styleName, final String... celulasRegioes) throws Exception{
@@ -920,12 +919,12 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Edita estilo das cÈlulas
+	 * Edita estilo das c√©lulas
 	 * 
 	 * @param sheet (XSSFSheet) - folha a ser alterada
-	 * @param celulasRegioes (String...) - celulas ou regiıes a serem editadas. Ex: A1 ou A1:D5 (criar· cÈlulas e linhas de A1 atÈ D5 inclusa) Separar por vÌrgula ("A1","A2:B3"...).
-	 * @throws NullPointerException - caso estilo n„o exista
-	 * @throws Exception - cÈlulas/regiıes inv·lidas
+	 * @param celulasRegioes (String...) - celulas ou regi√µes a serem editadas. Ex: A1 ou A1:D5 (criar√° c√©lulas e linhas de A1 at√© D5 inclusa) Separar por v√≠rgula ("A1","A2:B3"...).
+	 * @throws NullPointerException - caso estilo n√£o exista
+	 * @throws Exception - c√©lulas/regi√µes inv√°lidas
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editCellStyleInRowsCells(final XSSFSheet sheet, final String cellStyleName, final String... celulasRegioes) throws Exception{
@@ -984,7 +983,7 @@ public class POIUtil2 implements Serializable {
 	 * Configura negrito da fonte
 	 * 
 	 * @param name (String) - nome chave da fonte no HashMap
-	 * @param bold (boolean) - se È negrito ou n„o
+	 * @param bold (boolean) - se √© negrito ou n√£o
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editFontBold(final String name, final boolean bold) {
@@ -1035,22 +1034,22 @@ public class POIUtil2 implements Serializable {
 
 	/**
 	 * Insere imagem nos pontos XY definidos. Recebe o caminho da imagem (imagePath)
-	 * e lÍ/escreve os bytes com FileInputStream e ByteArrayOutputStream. Ambos s„o
+	 * e l√™/escreve os bytes com FileInputStream e ByteArrayOutputStream. Ambos s√£o
 	 * fechados no finally.
 	 * 
 	 * @param sheet      (XSSFSheet) - folha a ser alterada
-	 * @param regiao (String) - linha e cÈlulas que imagem ocupar·. Ex: "A1:H5"
+	 * @param regiao (String) - linha e c√©lulas que imagem ocupar√°. Ex: "A1:H5"
 	 * @param scaleX     (double) - Escala (tamanho) em X da imagem de acordo com
 	 *                   row1, row2, cell1, cell2
 	 * @param scaleY     (double) - Escala (tamanho) em Y da imagem de acordo com
 	 *                   row1, row2, cell1, cell2
-	 * @param dx1        (int) - PosiÁ„o X do canto superior esquerdo em relaÁ„o ao
+	 * @param dx1        (int) - Posi√ß√£o X do canto superior esquerdo em rela√ß√£o ao
 	 *                   col1
-	 * @param dx2        (int) - PosiÁ„o X do canto inferior direito em relaÁ„o ao
+	 * @param dx2        (int) - Posi√ß√£o X do canto inferior direito em rela√ß√£o ao
 	 *                   col2
-	 * @param dy1        (int) - PosiÁ„o Y do canto superior esquerdo em relaÁ„o ao
+	 * @param dy1        (int) - Posi√ß√£o Y do canto superior esquerdo em rela√ß√£o ao
 	 *                   row1
-	 * @param dy2        (int) - PosiÁ„o Y do canto inferior direito em relaÁ„o ao
+	 * @param dy2        (int) - Posi√ß√£o Y do canto inferior direito em rela√ß√£o ao
 	 *                   row2
 	 * @param anchorType (AnchorType) - Comportamento da imagem
 	 * @param imagePath  (String) - Caminho da imagem
@@ -1100,18 +1099,18 @@ public class POIUtil2 implements Serializable {
 	 * Insere imagem nos pontos XY definidos.
 	 * 
 	 * @param sheet      (XSSFSheet) - folha a ser alterada
-	 * @param regiao (String) - linha e cÈlulas que imagem ocupar·. Ex: "A1:H5"
+	 * @param regiao (String) - linha e c√©lulas que imagem ocupar√°. Ex: "A1:H5"
 	 * @param scaleX     (double) - Escala (tamanho) em X da imagem de acordo com
 	 *                   row1, row2, cell1, cell2
 	 * @param scaleY     (double) - Escala (tamanho) em Y da imagem de acordo com
 	 *                   row1, row2, cell1, cell2
-	 * @param dx1        (int) - PosiÁ„o X do canto superior esquerdo em relaÁ„o ao
+	 * @param dx1        (int) - Posi√ß√£o X do canto superior esquerdo em rela√ß√£o ao
 	 *                   col1
-	 * @param dx2        (int) - PosiÁ„o X do canto inferior direito em relaÁ„o ao
+	 * @param dx2        (int) - Posi√ß√£o X do canto inferior direito em rela√ß√£o ao
 	 *                   col2
-	 * @param dy1        (int) - PosiÁ„o Y do canto superior esquerdo em relaÁ„o ao
+	 * @param dy1        (int) - Posi√ß√£o Y do canto superior esquerdo em rela√ß√£o ao
 	 *                   row1
-	 * @param dy2        (int) - PosiÁ„o Y do canto inferior direito em relaÁ„o ao
+	 * @param dy2        (int) - Posi√ß√£o Y do canto inferior direito em rela√ß√£o ao
 	 *                   row2
 	 * @param anchorType (AnchorType) - Comportamento da imagem
 	 * @param fillColorRgb (int[]) - Cor de fundo da imagem em RGB.
@@ -1177,46 +1176,46 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Valida cÈlulas e lanÁa erro caso alguma esteja errada
-	 * @param celulas (String[]) array contendo todas as cÈlulas (separadas por vÌrgula). Ex: "A1","B3"...
+	 * Valida c√©lulas e lan√ßa erro caso alguma esteja errada
+	 * @param celulas (String[]) array contendo todas as c√©lulas (separadas por v√≠rgula). Ex: "A1","B3"...
 	 * @throws Exception
 	 */
 	private void validarCelulas(final String[] celulas) throws Exception {
 		for(int index = 0; index < celulas.length; index++) {
 			if(!celulas[index].matches(REGEX_CELULAS)) {
-				throw new Exception("CÈlula inv·lida -> " + celulas[index]);
+				throw new Exception("C√©lula inv√°lida -> " + celulas[index]);
 			}
 		}
 	}
 	
 	/**
-	 * Valida regiıes e lanÁa erro caso alguma esteja errada
-	 * @param regioes (String[]) array contendo todas as regiıes (separadas por vÌrgula). Ex: "A1:F1","D4:F7"
+	 * Valida regi√µes e lan√ßa erro caso alguma esteja errada
+	 * @param regioes (String[]) array contendo todas as regi√µes (separadas por v√≠rgula). Ex: "A1:F1","D4:F7"
 	 * @throws Exception
 	 */
 	private void validarRegioes(final String[] regioes) throws Exception {
 		for(int index = 0; index < regioes.length; index++) {
 			if(!regioes[index].matches(REGEX_REGIOES)) {
-				throw new Exception("Regi„o inv·lida -> " + regioes[index]);
+				throw new Exception("Regi√£o inv√°lida -> " + regioes[index]);
 			}
 		}
 	}
 	
 	/**
-	 * Valida cÈlulas e regiıes e lanÁa erro caso alguma esteja errada
-	 * @param celulasRegioes (String[]) array contendo todas as cÈlulas/regiıes (separadas por vÌrgula). Ex: "A1:F1","A3"...
+	 * Valida c√©lulas e regi√µes e lan√ßa erro caso alguma esteja errada
+	 * @param celulasRegioes (String[]) array contendo todas as c√©lulas/regi√µes (separadas por v√≠rgula). Ex: "A1:F1","A3"...
 	 * @throws Exception
 	 */
 	private void validarCelulasRegioes(final String[] celulasRegioes) throws Exception {
 		for(int index = 0; index < celulasRegioes.length; index++) {
 			if(!celulasRegioes[index].matches(REGEX_CELULAS_REGIOES)) {
-				throw new Exception("CÈlula/Regi„o inv·lida -> " + celulasRegioes[index]);
+				throw new Exception("C√©lula/Regi√£o inv√°lida -> " + celulasRegioes[index]);
 			}
 		}
 	}
 	
 	/**
-	 * Recupera o numero da linha e coluna de determinada cÈlula
+	 * Recupera o numero da linha e coluna de determinada c√©lula
 	 * @param celula (String) Ex: "A1"
 	 * @return array com linha(0) e coluna(1) (int[]) 
 	 */
@@ -1224,20 +1223,20 @@ public class POIUtil2 implements Serializable {
 		final String[] colunaArray = celula.replaceAll(REGEX_APENAS_LETRAS, "").split("");
 		final int linha = Integer.parseInt(celula.replaceAll(REGEX_APENAS_NUMEROS, ""));
 		int coluna = 0;
-		if(colunaArray.length == 1) {//SE TAMANHO == 1. EX: "F1" -> A COLUNA … O indexOf OF DA LETRA "F"
+		if(colunaArray.length == 1) {//SE TAMANHO == 1. EX: "F1" -> A COLUNA √â O indexOf OF DA LETRA "F"
 			coluna = this.colunas.indexOf(colunaArray[0]);
 			return new int[] {linha - 1,coluna};
 		}else {
 			/*SOMA (indexOf DA ULTIMA LETRA) + (26) * (A QUANTIDADE DE CICLO). EX: "ACA2" ->
 			 * indexOf "A" = 0;
-			 * 26 (LETRAS DO ALFABETO. S√O NECESS¡RIAS 26 COLUNAS PARA IR DE AA ATE BA, ETC)
+			 * 26 (LETRAS DO ALFABETO. S√ÉO NECESS√ÅRIAS 26 COLUNAS PARA IR DE AA ATE BA, ETC)
 			 * indexOf "C" + 1 = 3 
-			 * 0 + 26 * 3 = 78 (COLUNA CA) (indexOf de "C" È 2, POR…M O EXCEL COME«A NA COLUNA "A", N√O "AA", PORTANTO … SOMADO +1, LOGO PARA CHEGAR ¿ COLUNA "CA" MULTIPLICA-SE 26 * 3)*/ 
+			 * 0 + 26 * 3 = 78 (COLUNA CA) (indexOf de "C" √© 2, POR√âM O EXCEL COME√áA NA COLUNA "A", N√ÉO "AA", PORTANTO √â SOMADO +1, LOGO PARA CHEGAR √Ä COLUNA "CA" MULTIPLICA-SE 26 * 3)*/ 
 			coluna = this.colunas.indexOf(colunaArray[colunaArray.length - 1]) + VINTE_SEIS * (this.colunas.indexOf(colunaArray[colunaArray.length - 2]) + 1); 
 			int index = 0;
 			/*
-			 * ENQUANTO INDEX FOR MENOR QUE (TAMANHO DO NOME DA COLUNA - 2), OU SEJA ENQUANTO INDEX N√O CHEGAR ‡ PEN⁄LTIMA COLUNA
-			 * SOMA AO RESULTADO 676 (CICLO_AA_BA), POIS DE "AAA" AT… "BAA" EXISTEM 676 COLUNAS, PORTANTO MULTIPLICA O CICLO (676) COM O indexOf DA LETRA "A" + 1
+			 * ENQUANTO INDEX FOR MENOR QUE (TAMANHO DO NOME DA COLUNA - 2), OU SEJA ENQUANTO INDEX N√ÉO CHEGAR √† PEN√öLTIMA COLUNA
+			 * SOMA AO RESULTADO 676 (CICLO_AA_BA), POIS DE "AAA" AT√â "BAA" EXISTEM 676 COLUNAS, PORTANTO MULTIPLICA O CICLO (676) COM O indexOf DA LETRA "A" + 1
 			 * coluna = 78 (RESULTADO ENCONTRADO ACIMA)
 			 * coluna += 676 * 1 (indexOf "A" + 1)
 			 * coluna = 754 (COLUNA "ACA")
@@ -1251,7 +1250,7 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
-	 * Recupera os n˙meros das linhas (iniciais e finais) e colunas (iniciais e finais) de determinada regiao.
+	 * Recupera os n√∫meros das linhas (iniciais e finais) e colunas (iniciais e finais) de determinada regiao.
 	 * @param regiao (String) Ex: "A1:D1"
 	 * @return matriz com dois arrays de linha e coluna
 	 */
