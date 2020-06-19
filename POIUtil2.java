@@ -52,7 +52,6 @@ public class POIUtil2 implements Serializable {
 	private static final long serialVersionUID = 1191392087071562651L;
 	/**Integer*/
 	private static final int INTERVALO_A_A = 26;
-	private static final int CICLO_AA_BA = 676;//676 colunas de "AA" ate "BA"
 	/**String*/
 	private final String colunas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	private static final String REGEX_CELULAS = "^[A-Z]+\\d+$";
