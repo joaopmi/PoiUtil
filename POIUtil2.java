@@ -19,6 +19,7 @@ import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.ClientAnchor.AnchorType;
 import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -42,6 +43,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * Principal alteração -> Edição de células/regiões via String. Ex: "A1:B1"
  * 
  * Exemplo de uso no main
+ * @author https://github.com/joaopmi/PoiUtil - 17/06/2020
  *
  */
 public class POIUtil2 implements Serializable {
@@ -49,7 +51,7 @@ public class POIUtil2 implements Serializable {
 	/** Longs */
 	private static final long serialVersionUID = 1191392087071562651L;
 	/**Integer*/
-	private static final int VINTE_SEIS = 26;
+	private static final int INTERVALO_A_A = 26;
 	private static final int CICLO_AA_BA = 676;//676 colunas de "AA" ate "BA"
 	/**String*/
 	private final String colunas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -1227,24 +1229,26 @@ public class POIUtil2 implements Serializable {
 			coluna = this.colunas.indexOf(colunaArray[0]);
 			return new int[] {linha - 1,coluna};
 		}else {
-			/*SOMA (indexOf DA ULTIMA LETRA) + (26) * (A QUANTIDADE DE CICLO). EX: "ACA2" ->
+			/*SOMA (indexOf DA ULTIMA LETRA) + (26) * (INTERVAL DA COLUNA A à A). EX: "ACA2" ->
 			 * indexOf "A" = 0;
 			 * 26 (LETRAS DO ALFABETO. SÃO NECESSÁRIAS 26 COLUNAS PARA IR DE AA ATE BA, ETC)
 			 * indexOf "C" + 1 = 3 
-			 * 0 + 26 * 3 = 78 (COLUNA CA) (indexOf de "C" é 2, PORÉM O EXCEL COMEÇA NA COLUNA "A", NÃO "AA", PORTANTO É SOMADO +1, LOGO PARA CHEGAR À COLUNA "CA" MULTIPLICA-SE 26 * 3)*/ 
-			coluna = this.colunas.indexOf(colunaArray[colunaArray.length - 1]) + VINTE_SEIS * (this.colunas.indexOf(colunaArray[colunaArray.length - 2]) + 1); 
-			int index = 0;
-			/*
-			 * ENQUANTO INDEX FOR MENOR QUE (TAMANHO DO NOME DA COLUNA - 2), OU SEJA ENQUANTO INDEX NÃO CHEGAR à PENÚLTIMA COLUNA
-			 * SOMA AO RESULTADO 676 (CICLO_AA_BA), POIS DE "AAA" ATÉ "BAA" EXISTEM 676 COLUNAS, PORTANTO MULTIPLICA O CICLO (676) COM O indexOf DA LETRA "A" + 1
-			 * coluna = 78 (RESULTADO ENCONTRADO ACIMA)
-			 * coluna += 676 * 1 (indexOf "A" + 1)
-			 * coluna = 754 (COLUNA "ACA")
+			 * 0 + 26 * 3 = 78 (COLUNA CA)
+			 * (indexOf de "C" é 2, PORÉM O EXCEL COMEÇA NA COLUNA "A", NÃO "AA", PORTANTO É SOMADO +1, LOGO PARA CHEGAR À COLUNA "CA" MULTIPLICA-SE 26 * 3)*/ 
+			coluna = this.colunas.indexOf(colunaArray[colunaArray.length - 1]) + INTERVALO_A_A * (this.colunas.indexOf(colunaArray[colunaArray.length - 2]) + 1); 
+			/*ITERA DO FIM PARA O INÍCIO PULANDO AS DUAS ÚLTIMAS LETRAS. A CADA LOOP O INTERVALO É EXPONENCIALMENTE INCREMENTADO. EX:
+			 * "XFD1" -> ÚLTIMA COLUNA DE UM DOCUMENTO EXCEL
+			 * "FD" = 159  
+			 * "X" = 26 * 26 * indexOf "X" = 16.224
+			 * 16.224 + 159 = 16383 -> ÚLTIMA COLUNA "XFD"
 			 */
-			while(index < colunaArray.length - 2) {
-				coluna += CICLO_AA_BA * (this.colunas.indexOf(colunaArray[index])+1);
-				index++;
+			int index = colunaArray.length - 3;
+			int aux = 2;
+			while(index > -1) {
+				coluna += Math.pow(INTERVALO_A_A, aux++) * (this.colunas.indexOf(colunaArray[index])+1);
+				index--;
 			}
+			System.out.println(coluna);
 			return new int[] {linha - 1,coluna};
 		}
 	}
