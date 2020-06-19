@@ -8,4 +8,5 @@ Alguns comentários podem estar desatualizados ou com ortografia errada devido �
 Foi criada apenas a variável para a fonte Calibri, pois é a usada no exemplo.
 
 Exemplo no main da classe, apenas substitua o path em FileOutputStream ->
+
 final FileOutputStream fos = new FileOutputStream(new File(path));
