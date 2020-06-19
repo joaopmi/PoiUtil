@@ -39,11 +39,11 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
- * Versão nova de POIUtil.
- * Principal alteração -> Edição de células/regiões via String. Ex: "A1:B1"
- * 
+ * Versão 2.0 de POIUtil. Data: 17/06/2020
+ * Principal alteração -> Edição/criação de células/regiões via String. Ex: "A1:B1"
  * Exemplo de uso no main
- * @author https://github.com/joaopmi/PoiUtil - 17/06/2020
+ * 
+ * @author p067613 - https://github.com/joaopmi/PoiUtil
  *
  */
 public class POIUtil2 implements Serializable {
