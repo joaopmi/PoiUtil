@@ -1283,7 +1283,7 @@ public class POIUtil2 implements Serializable {
 		.setCellValue(sheet, "Documento Exemplo POIUtil2", "B1")
 		.setCellValue(sheet, "Arquivo gerado em " + df.format(new Date()), "B4")
 		.write();
-		final FileOutputStream fos = new FileOutputStream(new File("C:\\Users\\p067613\\Desktop\\Exemplo POIUtil2.xlsx"));
+		final FileOutputStream fos = new FileOutputStream(new File(path));
 		fos.write(arquivo, 0, arquivo.length);
 		fos.flush();
 		fos.close();
