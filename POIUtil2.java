@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -16,10 +17,10 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.ClientAnchor.AnchorType;
 import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -27,9 +28,11 @@ import org.apache.poi.ss.usermodel.Picture;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -39,21 +42,21 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
- * Versão 2.0 de POIUtil. Data: 17/06/2020
- * Principal alteração -> Edição/criação de células/regiões via String. Ex: "A1:B1"
+ * Versão 2.1 de POIUtil. Data: 30/06/2020
  * Exemplo de uso no main
  * 
- * @author p067613 - https://github.com/joaopmi/PoiUtil
+ * https://github.com/joaopmi/PoiUtil
  *
  */
 public class POIUtil2 implements Serializable {
 
 	/** Longs */
 	private static final long serialVersionUID = 1191392087071562651L;
-	/**Integer*/
-	private static final int INTERVALO_A_A = 26;
+	/**Boolean*/
+	private boolean auditoriaRegiaoAtualizada;
 	/**String*/
-	private final String colunas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	@SuppressWarnings("unused")
+	private String _ultimaRegiaoAtualizada;
 	private static final String REGEX_CELULAS = "^[A-Z]+\\d+$";
 	private static final String REGEX_REGIOES = "^[A-Z]+\\d+:[A-Z]+\\d+?$";
 	private static final String REGEX_CELULAS_REGIOES = "^[A-Z]+\\d+(:[A-Z]+\\d+)?$";
@@ -61,36 +64,36 @@ public class POIUtil2 implements Serializable {
 	private static final String REGEX_APENAS_NUMEROS = "[^\\d]";
 	private static final String CALIBRI = "Calibri";
 	/** XSSF */
-	private transient XSSFWorkbook workbook;
+	private transient XSSFWorkbook _workbook;
 	/** Maps */
-	private transient Map<String, XSSFCellStyle> cellStyles = new HashMap<>();
-	private transient Map<String, XSSFFont> fonts = new HashMap<>();
+	private transient Map<String, XSSFCellStyle> _cellStyles = new HashMap<>();
+	private transient Map<String, XSSFFont> _fonts = new HashMap<>();
 
 	// CONSTRUTORES
 
 	/** Inicializa um novo workbook vazio. */
 	public POIUtil2() {
-		this.workbook = new XSSFWorkbook();
+		this._workbook = new XSSFWorkbook();
 	}
 	
-	/** Inicializa o workbook a partir de um array de bytes de um excel. 
+	/** Inicializa o workbook a partir de um array de bytes de um excel
+	 * @param workbook (byte[]) - array de byte do arquivo 
 	 * @throws IOException */
 	public POIUtil2(final byte[] workbook) throws IOException {
-		this.workbook = new XSSFWorkbook(new ByteArrayInputStream(workbook));
+		this._workbook = new XSSFWorkbook(new ByteArrayInputStream(workbook));
 	}
 
 	/**
-	 * Inicializa um workbook através do path. Utiliza FileInputStream que é fechada
-	 * no finally
+	 * Inicializa um workbook através do filePath
 	 * 
-	 * @param path (String) - caminho do excel
+	 * @param filePath (String) - caminho do arquivo
 	 * @throws IOException
 	 */
-	public POIUtil2(final String path) throws IOException {
+	public POIUtil2(final String filePath) throws IOException {
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream(new File(path));
-			this.workbook = new XSSFWorkbook(fis);
+			fis = new FileInputStream(new File(filePath));
+			this._workbook = new XSSFWorkbook(fis);
 		} finally {
 			if (null != fis) {
 				fis.close();
@@ -106,22 +109,28 @@ public class POIUtil2 implements Serializable {
 	 * @return XSSFWorkbook
 	 */
 	public XSSFWorkbook getWorkbook() {
-		return this.workbook;
+		return this._workbook;
 	}
 	
 	/**
-	 * Escreve excel através do FileOutputStream com o caminho informado.
-	 * FileOutputStream e workbook fechados no finally
+	 * Escreve e fecha workbook no filePath.
 	 * 
-	 * @param path (String) - caminho destino para escrever excel
+	 * @param filePath (String) - caminho destino para escrever excel
+	 * @param autoSizeColumns (boolean) - Se True -> tamanho de todas as c células criadas será ajeitado de acordo com o tamanho de seus conteúdos. Afeta performance dependendo do tamanho das folhas do excel
+	 * @param evaluateAllFormulas (boolean) - Se True -> atualiza os valores de todas as fórmulas das folhas. Afeta performance dependendo do tamanho das folhas do excel
 	 * @throws IOException
 	 */
-	public void write(final String path) throws IOException {
+	public void write(final String filePath, final boolean autoSizeColumns, final boolean evaluateAllFormulas) throws IOException {
 		FileOutputStream fos = null;
 		try {
-			fos = new FileOutputStream(new File(path));
-			autoSizeColumns().evaluateAllFormulas();
-			this.workbook.write(fos);
+			fos = new FileOutputStream(new File(filePath));
+			if(autoSizeColumns) {
+				autoSizeColumns();
+			}
+			if(evaluateAllFormulas) {
+				evaluateAllFormulas();
+			}
+			this._workbook.write(fos);
 		} finally {
 			if (null != fos) {
 				fos.close();
@@ -131,22 +140,29 @@ public class POIUtil2 implements Serializable {
 	}
 
 	/**
-	 * Escreve no buffer e fecha o workbook no finally
+	 * Escreve workbook no buffer
 	 * 
 	 * @param ByteArrayOutputStream baos - buffer para escrever os bytes
+	 * @param autoSizeColumns (boolean) - Se True -> tamanho de todas as c células criadas será ajeitado de acordo com o tamanho de seus conteúdos. Afeta performance dependendo do tamanho das folhas do excel
+	 * @param evaluateAllFormulas (boolean) - Se True -> atualiza os valores de todas as fórmulas das folhas. Afeta performance dependendo do tamanho das folhas do excel
 	 * @throws IOException
 	 */
-	public void write(final ByteArrayOutputStream baos) throws IOException {
+	public void write(final ByteArrayOutputStream baos, final boolean autoSizeColumns, final boolean evaluateAllFormulas) throws IOException {
 		try {
-			autoSizeColumns().evaluateAllFormulas();
-			this.workbook.write(baos);
+			if(autoSizeColumns) {
+				autoSizeColumns();
+			}
+			if(evaluateAllFormulas) {
+				evaluateAllFormulas();
+			}
+			this._workbook.write(baos);
 		} finally {
 			close();
 		}
 	}
 
 	/**
-	 * Escreve no buffer ByteArrayOutputStream, fecha o buffer e workbook no finally
+	 * Escreve workbook no buffer e retornar array de byte
 	 * 
 	 * @return byte[]
 	 * @throws IOException
@@ -155,56 +171,54 @@ public class POIUtil2 implements Serializable {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			autoSizeColumns().evaluateAllFormulas();
-			this.workbook.write(baos);
+			this._workbook.write(baos);
 		} finally {
 			baos.close();
 			close();
 		}
 		return baos.toByteArray();
 	}
-
-	/**
-	 * Configura todas as fórmulas criadas nas células. É chamado automaticamente
-	 * nos métodos write().
-	 * @return PoiUtil
-	 */
-	public POIUtil2 evaluateAllFormulas() {
-		XSSFFormulaEvaluator.evaluateAllFormulaCells(this.workbook);
-		return this;
-	}
 	
 	/**
-	 * Configura em todas as folhas a largura de todas as colunas para "auto"
-	 * @return PoiUtil
+	 * Escreve no buffer ByteArrayOutputStream, fecha o buffer e workbook no finally
+	 * @param autoSizeColumns (boolean) - Define se irá ajustar o tamanho de todas as colunas usadas em todas as folhas. Afeta performance gravemente dependendo do tamanho do arquivo
+	 * @param evaluateFormulas (boolean) - Define se irá atualizar todas as fórmulas criadas e fará os cálculos
+	 * @return byte[]
+	 * @throws IOException
 	 */
-	public POIUtil2 autoSizeColumns() {
-		final int qtdSheets = this.workbook.getNumberOfSheets();
-		int index = 0;
-		while(index < qtdSheets) {
-			final XSSFSheet sheet = this.getSheetAt(index);
-			int index2 = 0;
-			while(index2 < sheet.getLastRowNum()) {
-				sheet.autoSizeColumn(index2);
-				index2++;
+	public byte[] write(final boolean autoSizeColumns, final boolean evaluateFormulas) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			if(autoSizeColumns) {
+				autoSizeColumns();
 			}
-			index++;
+			if(evaluateFormulas) {
+				evaluateAllFormulas();
+			}
+			this._workbook.write(baos);
+		} finally {
+			baos.close();
+			close();
 		}
-		return this;
+		return baos.toByteArray();
 	}
 	
 	/**
 	 * Download do workbook como .xlsx
 	 * @param fileName (String) - nome do arquivo. Caso não possua o .xlsx será inserido.
+	 * @param autoSizeColumns (boolean) - Define se irá ajustar o tamanho de todas as colunas usadas em todas as folhas. Afeta performance gravemente dependendo do tamanho do arquivo
+	 * @param evaluateFormulas (boolean) - Define se irá atualizar todas as fórmulas criadas e fará os cálculos
 	 * @throws IOException 
 	 */
-	public void download(String fileName) throws IOException {
-		if(!fileName.contains(".xlsx")) {
-			fileName = fileName + ".xlsx";
+	public void download(String fileName, final boolean autoSizeColumns, final boolean evaluateFormulas) throws IOException {
+		final String xlsx = ".xlsx";
+		if(!fileName.contains(xlsx)) {
+			fileName = fileName + xlsx;
 		}
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ServletOutputStream sos = null;
 		try {
-			this.write(baos);
+			this.write(baos,autoSizeColumns,evaluateFormulas);
 			final byte[] bytes = baos.toByteArray();
 			final HttpServletResponse response = (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
 			response.setHeader("Content-disposition", "attachment;filename="+fileName);
@@ -225,18 +239,39 @@ public class POIUtil2 implements Serializable {
 	 * @throws IOException
 	 */
 	public void close() throws IOException {
-		this.workbook.close();
+		this._workbook.close();
 	}
 
 	// SHEET
 
 	/**
-	 * Cria uma nova XSSFSheet nomeada
+	 * Cria uma nova folha (XSSFSheet).
 	 * 
 	 * @param name (String) - nome da folha
 	 */
 	public POIUtil2 createSheet(final String name) {
-		this.workbook.createSheet(name);
+		this._workbook.createSheet(name);
+		return this;
+	}
+	
+	/**
+	 * Reordena folha
+	 * @param sheet (XSSFSheet) - folha a ser reordenada
+	 * @param pos (int) - posição (base 0) da folha
+	 * @return POIUtil2
+	 */
+	public POIUtil2 moveSheet(final XSSFSheet sheet, final int pos) {
+		this._workbook.setSheetOrder(sheet.getSheetName(), pos);
+		return this;
+	}
+	
+	/**
+	 * Seta folha como a principal
+	 * @param index (int) - posição (base 0) da folha
+	 * @return POIUtil2
+	 */
+	public POIUtil2 activeSheet(final int index) {
+		this._workbook.setActiveSheet(index);
 		return this;
 	}
 
@@ -247,7 +282,7 @@ public class POIUtil2 implements Serializable {
 	 * @return XSSFSheet
 	 */
 	public XSSFSheet getSheetAt(final int index) {
-		return this.workbook.getSheetAt(index);
+		return this._workbook.getSheetAt(index);
 	}
 	
 	/**
@@ -256,7 +291,7 @@ public class POIUtil2 implements Serializable {
 	 * @return PoiUtil
 	 */
 	public POIUtil2 setActiveSheet(final int index) {
-		this.workbook.setActiveSheet(index);
+		this._workbook.setActiveSheet(index);
 		return this;
 	}
 
@@ -267,7 +302,7 @@ public class POIUtil2 implements Serializable {
 	 * @return XSSFSheet
 	 */
 	public XSSFSheet getSheet(final String name) {
-		return this.workbook.getSheet(name);
+		return this._workbook.getSheet(name);
 	}
 	
 	/**
@@ -276,7 +311,7 @@ public class POIUtil2 implements Serializable {
 	 * @return POIUtil
 	 */
 	public POIUtil2 removeSheetAt(final int index) {
-		this.workbook.removeSheetAt(index);
+		this._workbook.removeSheetAt(index);
 		return this;
 	}
 
@@ -293,13 +328,145 @@ public class POIUtil2 implements Serializable {
 		for(int index = 0; index < regioes.length; index++) {
 			final String regiao = regioes[index];
 			final int[][] linhasColunas = getRowsCols(regiao);
-			sheet.addMergedRegion(new CellRangeAddress(linhasColunas[0][0], linhasColunas[1][0], linhasColunas[0][1], linhasColunas[1][1]));			
+			sheet.addMergedRegion(new CellRangeAddress(linhasColunas[0][0], linhasColunas[1][0], linhasColunas[0][1], linhasColunas[1][1]));
 		}
+		setUltimaRegiaoAutalizada(sheet,regioes);
+		return this;
+	}
+	
+
+	/**
+	 * Cria uma nova área mesclada
+	 * 
+	 * @param sheet    (XSSFSheet) - folha a ser alterada
+	 * @param firstRow (int) - primeira linha para mesclar. Base 0
+	 * @param lastRow  (int) - última linha para mesclar. Base 0
+	 * @param firstCol (int) - primeira coluna para mesclar. Base 0
+	 * @param lastCol  (int) - última coluna para mesclar. Base 0
+	 * @return PoiUtil
+	 */
+	public POIUtil2 createMergedRegion(final XSSFSheet sheet, final int firstRow, final int lastRow, final int firstCol,
+			final int lastCol) {
+
+		sheet.addMergedRegion(new CellRangeAddress(firstRow, lastRow, firstCol, lastCol));
+		return this;
+	}
+
+	/**
+	 * Cria várias áreas mescladas de vários pares de linhas Ex: firstLastRows =
+	 * [[2,3],[4,5]] columns = [[2,3,8,6],[10,11,20,60]] Nas linhas 2 e 3 serão
+	 * criadas as áreas mescladas (2 a 3) e (8 a 6) Nas linhas 4 e 5 as áreas
+	 * mescladas (10,11) e (20,60)
+	 * 
+	 * @param sheet         (XSSFSheet) - folha a ser alterada
+	 * @param firstLastRows (int[][]) - Matriz de linhas a serem alteradas. Cada
+	 *                      array deve ser um par de ints indicando a linha inicio e
+	 *                      fim: [[1,2],[3,4]]. Base 0
+	 * @param columns       (int[][]) - Matriz de colunas a serem mescladas. A
+	 *                      quantidade de colunas deve ser um número par. Base 0
+	 * @throws IndexOutOfBoundsException - caso firstLastRows e columns sejam de
+	 *                                   tamanhos diferentes
+	 * @return PoiUtil
+	 */
+	public POIUtil2 createMergedRegions(final XSSFSheet sheet, final int[][] firstLastRows, final int[][] columns) {
+		for (int index = 0; index < firstLastRows.length; index++) {
+			final int[] rows = firstLastRows[index];
+			final int[] cols = columns[index];
+			for (int j = 0; j < cols.length; j++) {
+				sheet.addMergedRegion(new CellRangeAddress(rows[0], rows[1], cols[j], cols[++j]));
+			}
+
+		}
+		return this;
+	}
+	
+	/**
+	 * Cria painel estático
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param row (int) - linha final (base 1) a ser congelada
+	 * @param column (int) - coluna inicial a ser congelada
+	 * @return
+	 */
+	public POIUtil2 createFreezPanel(final XSSFSheet sheet, final int row, final int column) {
+		sheet.createFreezePane(column, row);
 		return this;
 	}
 
 	// CELL
 
+	/**
+	 * Cria células a partir do array int[]
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param value (String) - valor em String
+	 * @param row   (int) - número da linha onde serão criadas as células. Base 0
+	 * @param cells (int[]) - números das células a serem criadas. Base 0
+	 * @throws NullPointerException - caso linha não exista
+	 * @return PoiUtil2
+	 */
+	public POIUtil2 createCell(final XSSFSheet sheet, final String value, final int row, final int cellNum) {
+		final XSSFCell cell = this.getRow(sheet, row).createCell(cellNum);
+		cell.setCellValue(value);
+		setUltimaRegiaoAutalizadaLinhaColuna(sheet,row,cellNum);
+		return this;
+	}
+	
+	/**
+	 * Cria célula, seta valor String e configura estilo 
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param estilo (String) - nome do estilo existente
+	 * @param value (String) - valor em String
+	 * @param row   (int) - número da linha onde serão criadas as células. Base 0
+	 * @param cells (int[]) - números das células a serem criadas. Base 0
+	 * @throws NullPointerException - caso linha ou estilo não existam
+	 * @return PoiUtil2
+	 */
+	public POIUtil2 createCell(final XSSFSheet sheet, final String estilo, final String value, final int row, final int cellNum) {
+		final XSSFCell cell = this.getRow(sheet, row).createCell(cellNum);
+		cell.setCellStyle(getCellStyle(estilo));
+		cell.setCellValue(value);
+		setUltimaRegiaoAutalizadaLinhaColuna(sheet,row,cellNum);
+		return this;
+	}
+	
+	
+	/**
+	 * Cria célula e seta valor int
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param value (int) - valor em int
+	 * @param row   (int) - número da linha onde serão criadas as células. Base 0
+	 * @param cells (int[]) - números das células a serem criadas. Base 0
+	 * @throws NullPointerException - caso linha não exista
+	 * @return PoiUtil2
+	 */
+	public POIUtil2 createCell(final XSSFSheet sheet, final int value, final int row, final int cellNum) {
+		final XSSFCell cell = this.getRow(sheet, row).createCell(cellNum);
+		cell.setCellValue(value);
+		setUltimaRegiaoAutalizadaLinhaColuna(sheet,row,cellNum);
+		return this;
+	}
+	
+	/**
+	 * Cria célula, seta valor int e configura estilo
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param styleName (String) - nome do estilo criado
+	 * @param value (int) - valor em int
+	 * @param row   (int) - número da linha onde serão criadas as células. Base 0
+	 * @param cells (int[]) - números das células a serem criadas. Base 0
+	 * @throws NullPointerException - caso linha não exista
+	 * @return PoiUtil2
+	 */
+	public POIUtil2 createCell(final XSSFSheet sheet, final String styleName, final int value, final int row, final int cellNum) {
+		final XSSFCell cell = this.getRow(sheet, row).createCell(cellNum);
+		cell.setCellStyle(getCellStyle(styleName));
+		cell.setCellValue(value);
+		setUltimaRegiaoAutalizadaLinhaColuna(sheet,row,cellNum);
+		return this;
+	}
+	
 	/**
 	 * Cria célula
 	 * 
@@ -331,6 +498,7 @@ public class POIUtil2 implements Serializable {
 				this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]);
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
 	
@@ -344,7 +512,7 @@ public class POIUtil2 implements Serializable {
 	 * @throws Exception - células/regiões inválidas
 	 * @return PoiUtil
 	 */
-	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final String... celulasRegioes) throws Exception {
+	public POIUtil2 createCellsComStyle(final XSSFSheet sheet, final String cellStyleName, final String... celulasRegioes) throws Exception {
 		validarCelulasRegioes(celulasRegioes);
 		final String doisPontos = ":";
 		for(int i = 0; i < celulasRegioes.length; i++) {
@@ -357,15 +525,16 @@ public class POIUtil2 implements Serializable {
 				while(linhaInicial <= linhaFinal) {
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
-						this.getRow(sheet, linhaInicial).createCell(coluna++).setCellStyle(this.cellStyles.get(cellStyleName));
+						this.getRow(sheet, linhaInicial).createCell(coluna++).setCellStyle(this._cellStyles.get(cellStyleName));
 					}
 					linhaInicial++;
 				}
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
-				this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]).setCellStyle(this.cellStyles.get(cellStyleName));
+				this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]).setCellStyle(this._cellStyles.get(cellStyleName));
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
 	
@@ -380,7 +549,7 @@ public class POIUtil2 implements Serializable {
 	 * @throws Exception - células/regiões inválidas
 	 * @return PoiUtil
 	 */
-	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final String cellValue, final String... celulasRegioes) throws Exception {
+	public POIUtil2 createCellsComStyleValue(final XSSFSheet sheet, final String cellStyleName, final String cellValue, final String... celulasRegioes) throws Exception {
 		validarCelulasRegioes(celulasRegioes);
 		final String doisPontos = ":";
 		for(int i = 0; i < celulasRegioes.length; i++) {
@@ -394,7 +563,7 @@ public class POIUtil2 implements Serializable {
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
 						final XSSFCell cell = this.getRow(sheet, linhaInicial).createCell(coluna++);
-						cell.setCellStyle(this.cellStyles.get(cellStyleName));
+						cell.setCellStyle(this._cellStyles.get(cellStyleName));
 						cell.setCellValue(cellValue);
 					}
 					linhaInicial++;
@@ -402,10 +571,11 @@ public class POIUtil2 implements Serializable {
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
 				final XSSFCell cell = this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]);
-				cell.setCellStyle(this.cellStyles.get(cellStyleName));
+				cell.setCellStyle(this._cellStyles.get(cellStyleName));
 				cell.setCellValue(cellValue);
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
 	
@@ -420,7 +590,7 @@ public class POIUtil2 implements Serializable {
 	 * @throws Exception - células/regiões inválidas
 	 * @return PoiUtil
 	 */
-	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final long cellValue, final String... celulasRegioes) throws Exception {
+	public POIUtil2 createCellsComStyleValue(final XSSFSheet sheet, final String cellStyleName, final long cellValue, final String... celulasRegioes) throws Exception {
 		validarCelulasRegioes(celulasRegioes);
 		final String doisPontos = ":";
 		for(int i = 0; i < celulasRegioes.length; i++) {
@@ -434,7 +604,7 @@ public class POIUtil2 implements Serializable {
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
 						final XSSFCell cell = this.getRow(sheet, linhaInicial).createCell(coluna++);
-						cell.setCellStyle(this.cellStyles.get(cellStyleName));
+						cell.setCellStyle(this._cellStyles.get(cellStyleName));
 						cell.setCellValue(cellValue);
 					}
 					linhaInicial++;
@@ -442,10 +612,11 @@ public class POIUtil2 implements Serializable {
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
 				final XSSFCell cell = this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]);
-				cell.setCellStyle(this.cellStyles.get(cellStyleName));
+				cell.setCellStyle(this._cellStyles.get(cellStyleName));
 				cell.setCellValue(cellValue);
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
 	
@@ -460,7 +631,7 @@ public class POIUtil2 implements Serializable {
 	 * @throws Exception - células/regiões inválidas
 	 * @return PoiUtil
 	 */
-	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final int cellValue, final String... celulasRegioes) throws Exception {
+	public POIUtil2 createCellsComStyleValue(final XSSFSheet sheet, final String cellStyleName, final int cellValue, final String... celulasRegioes) throws Exception {
 		validarCelulasRegioes(celulasRegioes);
 		final String doisPontos = ":";
 		for(int i = 0; i < celulasRegioes.length; i++) {
@@ -474,7 +645,7 @@ public class POIUtil2 implements Serializable {
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
 						final XSSFCell cell = this.getRow(sheet, linhaInicial).createCell(coluna++);
-						cell.setCellStyle(this.cellStyles.get(cellStyleName));
+						cell.setCellStyle(this._cellStyles.get(cellStyleName));
 						cell.setCellValue(cellValue);
 					}
 					linhaInicial++;
@@ -482,10 +653,11 @@ public class POIUtil2 implements Serializable {
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
 				final XSSFCell cell = this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]);
-				cell.setCellStyle(this.cellStyles.get(cellStyleName));
+				cell.setCellStyle(this._cellStyles.get(cellStyleName));
 				cell.setCellValue(cellValue);
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
 	
@@ -500,7 +672,7 @@ public class POIUtil2 implements Serializable {
 	 * @throws Exception - células/regiões inválidas
 	 * @return PoiUtil
 	 */
-	public POIUtil2 createCells(final XSSFSheet sheet, final String cellStyleName, final double cellValue, final String... celulasRegioes) throws Exception {
+	public POIUtil2 createCellsComStyleValue(final XSSFSheet sheet, final String cellStyleName, final double cellValue, final String... celulasRegioes) throws Exception {
 		validarCelulasRegioes(celulasRegioes);
 		final String doisPontos = ":";
 		for(int i = 0; i < celulasRegioes.length; i++) {
@@ -514,7 +686,7 @@ public class POIUtil2 implements Serializable {
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
 						final XSSFCell cell = this.getRow(sheet, linhaInicial).createCell(coluna++);
-						cell.setCellStyle(this.cellStyles.get(cellStyleName));
+						cell.setCellStyle(this._cellStyles.get(cellStyleName));
 						cell.setCellValue(cellValue);
 					}
 					linhaInicial++;
@@ -522,12 +694,14 @@ public class POIUtil2 implements Serializable {
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
 				final XSSFCell cell = this.getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]);
-				cell.setCellStyle(this.cellStyles.get(cellStyleName));
+				cell.setCellStyle(this._cellStyles.get(cellStyleName));
 				cell.setCellValue(cellValue);
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
+	
 
 	/**
 	 * Configura em string o valor da célula
@@ -543,6 +717,23 @@ public class POIUtil2 implements Serializable {
 		validarCelulas(new String[] {celula});
 		final int[] linhaColuna = getRowCol(celula);
 		sheet.getRow(linhaColuna[0]).getCell(linhaColuna[1]).setCellValue(value);
+		setUltimaRegiaoAutalizada(sheet,celula);
+		return this;
+	}
+	
+	/**
+	 * Configura em string o valor da célula
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param value (String) - valor a ser configurado na célula
+	 * @param row (int) - linha
+	 * @param column (int) - coluna
+	 * @throws NullPointerException - caso linha ou célula não existam ou valor seja null
+	 * @throws Exception - caso célula informada seja inválida 
+	 * @return PoiUtil
+	 */
+	public POIUtil2 setCellValue(final XSSFSheet sheet, final String value, final int row, final int column) throws Exception {
+		sheet.getRow(row).getCell(column).setCellValue(value);
 		return this;
 	}
 	
@@ -563,6 +754,7 @@ public class POIUtil2 implements Serializable {
 		final XSSFCell xssfCell = sheet.getRow(linhaColuna[0]).getCell(linhaColuna[1]);
 		xssfCell.setCellValue(value);
 		xssfCell.setCellStyle(this.getCellStyle(cellStyleName));
+		setUltimaRegiaoAutalizada(sheet,celula);
 		return this;
 	}
 
@@ -580,6 +772,7 @@ public class POIUtil2 implements Serializable {
 		validarCelulas(new String[] {celula});
 		final int[] linhaColuna = getRowCol(celula);
 		sheet.getRow(linhaColuna[0]).getCell(linhaColuna[1]).setCellValue(value);
+		setUltimaRegiaoAutalizada(sheet,celula);
 		return this;
 	}
 	
@@ -600,6 +793,7 @@ public class POIUtil2 implements Serializable {
 		final XSSFCell xssfCell = sheet.getRow(linhaColuna[0]).getCell(linhaColuna[1]);
 		xssfCell.setCellValue(value);
 		xssfCell.setCellStyle(this.getCellStyle(cellStyleName));
+		setUltimaRegiaoAutalizada(sheet,celula);
 		return this;
 	}
 
@@ -617,6 +811,32 @@ public class POIUtil2 implements Serializable {
 		final int[] linhaColuna = getRowCol(celula);
 		return this.getRow(sheet,linhaColuna[0]).getCell(linhaColuna[1]);
 	}
+	
+
+	/**
+	 * Retorna célula. Retorna nulo caso célula não exista
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param linha (int) - linha da célula
+	 * @param coluna (int) - coluna da célula
+	 * @throws NullPointerException - caso linha não exista
+	 * @return XSSFCell
+	 */
+	public XSSFCell getCell(final XSSFSheet sheet, final int linha, final int coluna){
+		return sheet.getRow(linha).getCell(coluna);
+	}
+	
+	
+	/**
+	 * Recupera a localização de uma célula existente em String.
+	 * @param sheet (XSSFSheet) - folha
+	 * @param linha (int) - número da linha
+	 * @param coluna (int) - número da coluna
+	 * @return localização em String. Ex: "ABF31"
+	 */
+	public String getCellCreatedString(final XSSFSheet sheet, final int linha, final int coluna){
+		return sheet.getRow(linha).getCell(coluna).getAddress().formatAsString();
+	}
 
 	// ROW
 
@@ -629,6 +849,7 @@ public class POIUtil2 implements Serializable {
 	 */
 	public POIUtil2 createRow(final XSSFSheet sheet, final int row) {
 		sheet.createRow(row);
+		setUltimaRegiaoAutalizada(sheet,row);
 		return this;
 	}
 	
@@ -643,6 +864,7 @@ public class POIUtil2 implements Serializable {
 		for(final int row : rows) {
 			sheet.createRow(row);
 		}
+		setUltimaRegiaoAutalizada(sheet,rows);
 		return this;
 	}
 
@@ -666,7 +888,7 @@ public class POIUtil2 implements Serializable {
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createCellStyle(final String cellStyleName) {
-		this.cellStyles.put(cellStyleName, this.workbook.createCellStyle());
+		this._cellStyles.put(cellStyleName, this._workbook.createCellStyle());
 		return this;
 	}
 	
@@ -695,6 +917,32 @@ public class POIUtil2 implements Serializable {
 		}
 		return this;
 	}
+	
+	/**
+	 * Cria e configura XSSFCellStyle no HashMap<String,XSSFCellStyle>
+	 * @param name (String) - key no hashmap
+	 * @param font (String) - key da fonte no HashMap<String,XSSFFont>
+	 * @param hAlign (HorizontalAlignment) - alinhameto horizontal texto
+	 * @param vAlign (VerticalAlignment) - posialinhametoção vertical texto
+	 * @param fill (FillPatternType) - padrão de preenchimento do background
+	 * @param color (Color) - índice da cor de preenchimento
+	 * @param borders - (BorderStyle...) - array de bordas -> Top, Right, Bottom, Left 
+	 * @return
+	 */
+	public POIUtil2 createCellStyle(final String name, final String font,final boolean wrapText, final HorizontalAlignment hAlign, final VerticalAlignment vAlign,
+			final FillPatternType fill, final Color color,final BorderStyle... borders) {
+		
+		createCellStyle(name).editCellStyleFont(name, font).editCellStyleWrapText(name, wrapText).editCellStyleAlignment(name, hAlign, vAlign)
+		.editCellStyleFillPattern(name, fill).editCellStyleForegroundColor(name, color);
+		if(null != borders) {
+			final BorderStyle[] allBorder = new BorderStyle[4];
+			for(int index = 0; index < borders.length; index++) {
+				allBorder[index] = borders[index];
+			}
+			editCellStyleBorder(name, allBorder[0], allBorder[1], allBorder[2], allBorder[3]);
+		}
+		return this;
+	}
 
 	/**
 	 * Retorna XSSFCellStyle armazenado no HashMap pela key nome. Retorna nulo caso
@@ -704,7 +952,19 @@ public class POIUtil2 implements Serializable {
 	 * @return XSSFCellStyle
 	 */
 	public XSSFCellStyle getCellStyle(final String nome) {
-		return this.cellStyles.get(nome);
+		return this._cellStyles.get(nome);
+	}
+	
+	/**
+	 * Altera o formato do estilo. Ex: "dd/MM/yyyy" -> célula será do tipo Data.
+	 * @param cellStyleName (String) - nome chave do estilo no HashMap
+	 * @param format (String) - formato desejado
+	 * @return
+	 */
+	public POIUtil2 editCellStyleDataFormat(final String cellStyleName, final String format) {
+		final XSSFCellStyle style = getCellStyle(cellStyleName);
+		style.setDataFormat(getDataFormat(format));
+		return this;
 	}
 
 	/**
@@ -736,6 +996,39 @@ public class POIUtil2 implements Serializable {
 		if (null != borderLeft) {
 			cellStyle.setBorderLeft(borderLeft);
 		}
+		return this;
+	}
+	
+	/**
+	 * Edita borda da célula
+	 * 
+	 * @param cell (XSSF) - célula com estilo
+	 * @param borderTop     (BorderStyle) - borda topo. Passe nulo para não setar
+	 * @param borderRight   (BorderStyle) - borda direita. Passe nulo para não setar
+	 * @param borderBottom  (BorderStyle) - borda inferior. Passe nulo para não
+	 *                      setar
+	 * @param borderLeft    (BorderStyle) - borda esquerda. Passe nulo para não
+	 *                      setar
+	 * @throws NullPointerException - caso estilo não exista
+	 * @return PoiUtil
+	 */
+	public POIUtil2 editCellStyleBorder(final XSSFCell cell, final BorderStyle borderTop,
+			final BorderStyle borderRight, final BorderStyle borderBottom, final BorderStyle borderLeft) {
+
+		final XSSFCellStyle cellStyle = (XSSFCellStyle) cell.getCellStyle().clone();
+		if (null != borderTop) {
+			cellStyle.setBorderTop(borderTop);
+		}
+		if (null != borderRight) {
+			cellStyle.setBorderRight(borderRight);
+		}
+		if (null != borderBottom) {
+			cellStyle.setBorderBottom(borderBottom);
+		}
+		if (null != borderLeft) {
+			cellStyle.setBorderLeft(borderLeft);
+		}
+		cell.setCellStyle(cellStyle);
 		return this;
 	}
 
@@ -795,6 +1088,31 @@ public class POIUtil2 implements Serializable {
 		}
 		return this;
 	}
+	
+	/**
+	 * Edita o alinhamento horizontal e vertical da célula
+	 * 
+	 * @param cell       (XSSFCell) - célula com estilo
+	 * @param horizontalAlignment (HorizontalAlignment) - alinhamento horizontal.
+	 *                            Passe null para não setar
+	 * @param verticalAlignment   (VerticalAlignment) - alinhamento vertical. Passe
+	 *                            null para não setar
+	 * @throws NullPointerException - caso estilo não exista
+	 * @return
+	 */
+	public POIUtil2 editCellStyleAlignment(final XSSFCell cell, final HorizontalAlignment horizontalAlignment,
+			final VerticalAlignment verticalAlignment) {
+
+		final XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle().clone();
+		if (null != horizontalAlignment) {
+			style.setAlignment(horizontalAlignment);
+		}
+		if (null != verticalAlignment) {
+			style.setVerticalAlignment(verticalAlignment);
+		}
+		cell.setCellStyle(style);
+		return this;
+	}
 
 	/**
 	 * Configura se há quebra de texto no estilo
@@ -834,6 +1152,19 @@ public class POIUtil2 implements Serializable {
 		}
 		return this;
 	}
+	
+	/**
+	 * Configura cor de fundo do estilo
+	 * @param cellStyleName (String) - nome chave da fonte no HashMap
+	 * @param color (Color) - cor de fundo
+	 * @return PoiUtil
+	 */
+	public POIUtil2 editCellStyleForegroundColor(final String cellStyleName, final Color color) {
+		if(null != color) {
+			this.getCellStyle(cellStyleName).setFillForegroundColor(new XSSFColor(color));			
+		}
+		return this;
+	}
 
 	/**
 	 * Configura um formato de valor para o estilo. Ex: R$0.00
@@ -843,7 +1174,7 @@ public class POIUtil2 implements Serializable {
 	 * @return PoiUtil
 	 */
 	public POIUtil2 editCellStyleFormatValue(final String cellStyleName, final String format) {
-		final XSSFCreationHelper helper = this.workbook.getCreationHelper();
+		final XSSFCreationHelper helper = this._workbook.getCreationHelper();
 		this.getCellStyle(cellStyleName).setDataFormat(helper.createDataFormat().getFormat(format));
 		return this;
 	}
@@ -881,6 +1212,7 @@ public class POIUtil2 implements Serializable {
 				this.createRow(sheet, linhaColuna[0]).getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]);
 			}
 		}
+		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		return this;
 	}
 
@@ -907,14 +1239,15 @@ public class POIUtil2 implements Serializable {
 					final XSSFRow row = this.createRow(sheet, linhaInicial).getRow(sheet, linhaInicial);
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
-						row.createCell(coluna++).setCellStyle(this.cellStyles.get(styleName));
+						row.createCell(coluna++).setCellStyle(this._cellStyles.get(styleName));
 					}
 					linhaInicial++;
 				}
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
-				this.createRow(sheet, linhaColuna[0]).getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]).setCellStyle(this.cellStyles.get(styleName));
+				this.createRow(sheet, linhaColuna[0]).getRow(sheet, linhaColuna[0]).createCell(linhaColuna[1]).setCellStyle(this._cellStyles.get(styleName));
 			}
+			setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		}
 		return this;
 	}
@@ -942,14 +1275,15 @@ public class POIUtil2 implements Serializable {
 				while(linhaInicial <= linhaFinal) {
 					int coluna = colunaInicial;
 					while(coluna <= colunaFinal) {
-						this.getRow(sheet, linhaInicial).getCell(coluna).setCellStyle(this.cellStyles.get(cellStyleName));
+						this.getRow(sheet, linhaInicial).getCell(coluna).setCellStyle(this._cellStyles.get(cellStyleName));
 					}
 					linhaInicial++;
 				}
 			}else {
 				final int[] linhaColuna = getRowCol(celulasRegioes[i]);
-				this.getRow(sheet, linhaColuna[0]).getCell(linhaColuna[1]).setCellStyle(this.cellStyles.get(cellStyleName));
+				this.getRow(sheet, linhaColuna[0]).getCell(linhaColuna[1]).setCellStyle(this._cellStyles.get(cellStyleName));
 			}
+			setUltimaRegiaoAutalizada(sheet,celulasRegioes);
 		}
 		return this;
 	}
@@ -963,7 +1297,7 @@ public class POIUtil2 implements Serializable {
 	 * @return PoiUtil
 	 */
 	public POIUtil2 createFont(final String name) {
-		this.fonts.put(name, this.workbook.createFont());
+		this._fonts.put(name, this._workbook.createFont());
 		return this;
 	}
 	
@@ -989,6 +1323,21 @@ public class POIUtil2 implements Serializable {
 	 */
 	public POIUtil2 editFontBold(final String name, final boolean bold) {
 		this.getFont(name).setBold(bold);
+		return this;
+	}
+	
+	/**
+	 * Configura negrito da fonte da célula
+	 * 
+	 * @param cell (XSSFCell) - célula com estilo a ser configurado
+	 * @param bold (boolean) - se é negrito ou não
+	 * @return PoiUtil
+	 */
+	public POIUtil2 editFontBold(final XSSFCell cell, final boolean bold) {
+		final XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle().clone();
+		final XSSFFont font = copyFont(style.getFont());
+		font.setBold(bold);
+		style.setFont(font);
 		return this;
 	}
 	
@@ -1028,7 +1377,17 @@ public class POIUtil2 implements Serializable {
 	 * @return XSSFFont
 	 */
 	public XSSFFont getFont(final String name) {
-		return this.fonts.get(name);
+		return this._fonts.get(name);
+	}
+	
+	public XSSFFont copyFont(final XSSFFont font) {
+		final XSSFFont newFont = this._workbook.createFont();
+		newFont.setFamily(font.getFamily());
+		newFont.setFontName(font.getFontName());
+		newFont.setFontHeight(font.getFontHeight());
+		newFont.setColor(font.getColor());
+		newFont.setBold(font.getBold());
+		return newFont;
 	}
 
 	// IMAGES
@@ -1060,6 +1419,7 @@ public class POIUtil2 implements Serializable {
 			final AnchorType anchorType, final String imagePath) throws Exception {
 
 		validarRegioes(new String[] {regiao});
+		setUltimaRegiaoAutalizada(sheet,regiao);
 		final int[][] linhasColunas = getRowsCols(regiao);
 		FileInputStream fis = null;
 		ByteArrayOutputStream baos = null;
@@ -1071,7 +1431,7 @@ public class POIUtil2 implements Serializable {
 			while ((tamanhoLido = fis.read(bufferImg)) != -1) {
 				baos.write(bufferImg, 0, tamanhoLido);
 			}
-			final CreationHelper helper = this.workbook.getCreationHelper();
+			final CreationHelper helper = this._workbook.getCreationHelper();
 			final XSSFDrawing drawing = sheet.createDrawingPatriarch();
 			final ClientAnchor anchor = helper.createClientAnchor();
 			anchor.setAnchorType(anchorType);
@@ -1083,7 +1443,7 @@ public class POIUtil2 implements Serializable {
 			anchor.setDx2(dx2 * Units.EMU_PER_POINT);
 			anchor.setDy1(dy1 * Units.EMU_PER_POINT);
 			anchor.setDy2(dy2 * Units.EMU_PER_POINT);
-			final int pictureIndex = this.workbook.addPicture(baos.toByteArray(), Workbook.PICTURE_TYPE_PNG);
+			final int pictureIndex = this._workbook.addPicture(baos.toByteArray(), Workbook.PICTURE_TYPE_PNG);
 			final Picture picture = drawing.createPicture(anchor, pictureIndex);
 			picture.resize(scaleX, scaleY);
 		} finally {
@@ -1122,9 +1482,9 @@ public class POIUtil2 implements Serializable {
 			final AnchorType anchorType, final int[] fillColorRgb,final byte[] image) throws Exception {
 		
 		validarRegioes(new String[] {regiao});
+		setUltimaRegiaoAutalizada(sheet,regiao);
 		final int[][] linhasColunas = getRowsCols(regiao);
-		
-			final CreationHelper helper = this.workbook.getCreationHelper();
+			final CreationHelper helper = this._workbook.getCreationHelper();
 			final XSSFDrawing drawing = sheet.createDrawingPatriarch();
 			final ClientAnchor anchor = helper.createClientAnchor();
 			anchor.setAnchorType(anchorType);
@@ -1136,7 +1496,7 @@ public class POIUtil2 implements Serializable {
 			anchor.setDx2(dx2 * Units.EMU_PER_POINT);
 			anchor.setDy1(dy1 * Units.EMU_PER_POINT);
 			anchor.setDy2(dy2 * Units.EMU_PER_POINT);
-			final int pictureIndex = this.workbook.addPicture(image, Workbook.PICTURE_TYPE_PNG);
+			final int pictureIndex = this._workbook.addPicture(image, Workbook.PICTURE_TYPE_PNG);
 			final Picture picture = drawing.createPicture(anchor, pictureIndex);
 			picture.setFillColor(fillColorRgb[0], fillColorRgb[1], fillColorRgb[2]);
 			picture.resize(scaleX, scaleY);
@@ -1158,6 +1518,114 @@ public class POIUtil2 implements Serializable {
 		return this;
 	}
 	
+	
+	/**
+	 * Configura em todas as folhas a largura de todas as colunas para "auto". Afeta performance gravemente dependendo do tamanho do arquivo.
+	 * @return PoiUtil
+	 */
+	public POIUtil2 autoSizeColumns() {
+		for(int i = 0; i < this._workbook.getNumberOfSheets(); i++) {
+			autoSizeColumns(this.getSheetAt(i));
+		}
+		return this;
+	}
+	
+	/**
+	 * Ajusta o tamanho de todas as colunas preenchidas na folha. Afeta performance gravemente dependendo do tamanho da folha.
+	 * @param sheet (XSSFSheet) - Folha para ser ajustada
+	 * @return
+	 */
+	public POIUtil2 autoSizeColumns(final XSSFSheet sheet) {
+		int lastCellNum = 0;
+		int i = 0;
+		XSSFRow row = null;
+		while(i < sheet.getLastRowNum()) {
+			row = sheet.getRow(i++);
+			if(null == row) {
+				break;
+			}
+			final int lastCellRow = row.getLastCellNum();
+			lastCellNum = lastCellRow > lastCellNum ? lastCellRow : lastCellNum;
+		}
+		i = 0;
+		while(i < lastCellNum) {
+			sheet.autoSizeColumn(i++);
+		}
+		return this;
+	}
+	
+	//FÓRMULAS
+
+	/**
+	 * Atualiza todas as fórmulas criadas nas células. É chamado automaticamente nos métodos write().
+	 * @return PoiUtil
+	 */
+	public POIUtil2 evaluateAllFormulas() {
+		XSSFFormulaEvaluator.evaluateAllFormulaCells(this._workbook);
+		return this;
+	}
+
+	/**
+	 * Cria fórmula de soma para a célula. ATENÇÃO: o tipo da célula será alterado para CELL_TYPE_FORMULA
+	 * @param cell (XSSFCell) - célula a ser alterada
+	 * @param evaluate (boolean) - configura se a fórmula será executada após sua criação
+	 * @param formula (String) - fórmula String (em inglês). Ex: SUM(A1:B1).
+	 * @return POIUtil2
+	 */
+	public POIUtil2 createCellFormula(final XSSFCell cell, final boolean evaluate,final String formula) {
+		cell.setCellType(CellType.FORMULA);
+		cell.setCellFormula(formula);
+		if(evaluate) {
+			this._workbook.getCreationHelper().createFormulaEvaluator().evaluate(cell);
+		}
+		return this;
+	}
+	
+	/**
+	 * Cria fórmula de SOMA para a célula. ATENÇÃO: o tipo da célula será alterado para CELL_TYPE_FORMULA
+	 * @param cell (XSSFCell) - célula a ser alterada
+	 * @param evaluate (boolean) - configura se a fórmula será executada após sua criação
+	 * @param formula (String) - região a ser somada. Ex: A1:B1
+	 * @return POIUtil2
+	 */
+	public POIUtil2 sum(final XSSFCell cell, final boolean evaluate,final String regiao) {
+		return createCellFormula(cell, evaluate,"SUM("+regiao+")");
+	}
+	
+	
+	/**
+	 * Cria fórmula de CONT.SES para a célula. ATENÇÃO: o tipo da célula será alterado para CELL_TYPE_FORMULA
+	 * @param cell (XSSFCell) - célula a ser alterada
+	 * @param evaluate (boolean) - configura se a fórmula será executada após sua criação
+	 * @param regiaoCriterio (String...) - array String contendo a região e o critério da função CONT.SES. Deve ser passado em pares. Ex: "A1:B1","VERDADEIRO","A3","FALSO"...
+	 * @return POIUtil2
+	 */
+	public POIUtil2 countIfs(final XSSFCell cell, final boolean evaluate,final String... regiaoCriterio) {
+		final StringBuilder contSe = new StringBuilder(32);
+		final String virgula = ",";
+		contSe.append("COUNTIFS(");
+		for(int i = 0; i < regiaoCriterio.length;) {
+			contSe.append(regiaoCriterio[i] + virgula + regiaoCriterio[i + 1]);
+			i += 2;
+			if(i < regiaoCriterio.length) {
+				contSe.append(virgula);
+			}
+		}
+		contSe.append(")");
+		return createCellFormula(cell, evaluate,contSe.toString());
+	}
+	
+	/**
+	 * Retorna fórmula DATA(ano,mes,dia)
+	 * @param cellRow (String) - localização da célula em String
+	 * @param month (int) - mês desejado (base 1)
+	 * @param day (int) - dia desejado (base 1)
+	 * @return
+	 */
+	public String date(final String cellRow, final int month, final int day) {
+		return "DATE("+cellRow+","+month+","+day+")";
+	}
+	
 	//OUTROS
 	private void close(final ByteArrayOutputStream baos, final ServletOutputStream sos) {
 		if (null != baos) {
@@ -1174,6 +1642,26 @@ public class POIUtil2 implements Serializable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Cria formato e retorna seu valor em short
+	 * @param format (String) - formato desejado. Ex: "dd/MM/yyyy"
+	 * @return formato (short)
+	 */
+	public short getDataFormat(final String format) {
+		return this._workbook.getCreationHelper().createDataFormat().getFormat(format);
+	}
+	
+	/**
+	 * Concatena duas colunas para formar uma região. Ex: concat("A1","B1") = "A1:B1"
+	 * @param col1 (String) - coluna início
+	 * @param col2 (String) - coluna final
+	 * @throws NullPointerException - caso coluna seja null
+	 * @return (String) - coluna início : coluna final
+	 */
+	public String concat(final String col1, final String col2) {
+		return col1 + ":" + col2;
 	}
 	
 	/**
@@ -1217,54 +1705,97 @@ public class POIUtil2 implements Serializable {
 	
 	/**
 	 * Recupera o numero da linha e coluna de determinada célula
-	 * @param celula (String) Ex: "A1"
+	 * @param cell (String) Ex: "A1"
 	 * @return array com linha(0) e coluna(1) (int[]) 
 	 */
-	private int[] getRowCol(final String celula) {
-		final String[] colunaArray = celula.replaceAll(REGEX_APENAS_LETRAS, "").split("");
-		final int linha = Integer.parseInt(celula.replaceAll(REGEX_APENAS_NUMEROS, ""));
-		int coluna = 0;
-		if(colunaArray.length == 1) {//SE TAMANHO == 1. EX: "F1" -> A COLUNA É O indexOf OF DA LETRA "F"
-			coluna = this.colunas.indexOf(colunaArray[0]);
-			return new int[] {linha - 1,coluna};
-		}else {
-			/*SOMA (indexOf DA ULTIMA LETRA) + (26) * (INTERVAL DA COLUNA A à A). EX: "ACA2" ->
-			 * indexOf "A" = 0;
-			 * 26 (LETRAS DO ALFABETO. SÃO NECESSÁRIAS 26 COLUNAS PARA IR DE AA ATE BA, ETC)
-			 * indexOf "C" + 1 = 3 
-			 * 0 + 26 * 3 = 78 (COLUNA CA)
-			 * (indexOf de "C" é 2, PORÉM O EXCEL COMEÇA NA COLUNA "A", NÃO "AA", PORTANTO É SOMADO +1, LOGO PARA CHEGAR À COLUNA "CA" MULTIPLICA-SE 26 * 3)*/ 
-			coluna = this.colunas.indexOf(colunaArray[colunaArray.length - 1]) + INTERVALO_A_A * (this.colunas.indexOf(colunaArray[colunaArray.length - 2]) + 1); 
-			/*ITERA DO FIM PARA O INÍCIO PULANDO AS DUAS ÚLTIMAS LETRAS. A CADA LOOP O INTERVALO É EXPONENCIALMENTE INCREMENTADO. EX:
-			 * "XFD1" -> ÚLTIMA COLUNA DE UM DOCUMENTO EXCEL
-			 * "FD" = 159  
-			 * "X" = 26 * 26 * indexOf "X" = 16.224
-			 * 16.224 + 159 = 16383 -> ÚLTIMA COLUNA "XFD"
-			 */
-			int index = colunaArray.length - 3;
-			int aux = 2;
-			while(index > -1) {
-				coluna += Math.pow(INTERVALO_A_A, aux++) * (this.colunas.indexOf(colunaArray[index])+1);
-				index--;
-			}
-			System.out.println(coluna);
-			return new int[] {linha - 1,coluna};
-		}
+	private int[] getRowCol(final String cell) {
+		final CellReference cellRef = new CellReference(cell);
+		return new int[] {cellRef.getRow(),cellRef.getCol()};
 	}
+	
 	
 	/**
 	 * Recupera os números das linhas (iniciais e finais) e colunas (iniciais e finais) de determinada regiao.
-	 * @param regiao (String) Ex: "A1:D1"
+	 * @param region (String) Ex: "A1:D1"
 	 * @return matriz com dois arrays de linha e coluna
 	 */
-	private int[][] getRowsCols(final String regiao){
-		final String[] regiaoArray = regiao.split(":");
+	private int[][] getRowsCols(final String region){
+		final String[] regiaoArray = region.split(":");
 		final int[][] retorno = new int[2][1];
 		retorno[0] = getRowCol(regiaoArray[0]);
 		retorno[1] = getRowCol(regiaoArray[1]);
 		return retorno;
 	}
 	
+	/**
+	 * Recupera a localização da célula em String.
+	 * @param row (int) - número da linha
+	 * @param col (int) - número da coluna
+	 * @return localização em String. Ex: "ABF31"
+	 */
+	public String getCellString(final int row, final int col) {
+		final CellReference cellReference = new CellReference(row, col);
+		return cellReference.formatAsString();
+	}
+	
+	/**
+	 * Recupera a localização da célula em String.
+	 * @param linha (int) - número da linha
+	 * @param coluna (int) - número da coluna
+	 * @return localização em String. Ex: "ABF31"
+	 */
+	public String getLockedCellString(final int linha, final int coluna, final boolean lockRow, final boolean lockCell) {
+		final String cellString = getCellString(linha, coluna);
+		final String cell = cellString.replaceAll(REGEX_APENAS_LETRAS, "");
+		final String row = cellString.replaceAll(REGEX_APENAS_NUMEROS, "");
+		final String dollarSign = "$";
+		return (lockCell ? dollarSign + cell : cell) + (lockRow ? dollarSign + row : row);
+	}
+	
+	/**
+	 * Seta última célula/região que foi criada/editada
+	 * @param celulasRegioes
+	 */
+	private void setUltimaRegiaoAutalizada(final XSSFSheet sheet, final String... celulasRegioes) {
+		if(this.auditoriaRegiaoAtualizada) {
+			this._ultimaRegiaoAtualizada = null;
+			if(celulasRegioes.length > 0 ) {
+				this._ultimaRegiaoAtualizada = sheet.getSheetName() + "!"+celulasRegioes[celulasRegioes.length -1 ];
+			}
+		}
+	}
+	
+	/**
+	 * Seta última linha criada
+	 * @param linhas
+	 */
+	private void setUltimaRegiaoAutalizada(final XSSFSheet sheet,final int... linhas) {
+		if(this.auditoriaRegiaoAtualizada) {
+			this._ultimaRegiaoAtualizada = null;
+			if(linhas.length > 0) {
+				this._ultimaRegiaoAtualizada = sheet.getSheetName() + "!Linha " + linhas[linhas.length -1 ] + " criada";			
+			}
+		}
+	}
+	
+	/**
+	 * Seta última célula/região que foi criada/editada
+	 * @param linhas
+	 */
+	public void setUltimaRegiaoAutalizadaLinhaColuna(final XSSFSheet sheet,final int linha, final int coluna) {
+		if(this.auditoriaRegiaoAtualizada) {
+			this._ultimaRegiaoAtualizada = sheet.getSheetName() + "!" + getCellCreatedString(sheet, linha, coluna);			
+		}
+	}
+
+	/**
+	 * Configura se a variável _ultimaRegiaoAtualizada deve ser atualizada. Deve ser usada somente em desenvolvimento, pois afeta performance. 
+	 * @param auditoriaRegiaoAtualizada (boolean)
+	 */
+	public void setAuditoriaRegiaoAtualizada(boolean auditoriaRegiaoAtualizada) {
+		this.auditoriaRegiaoAtualizada = auditoriaRegiaoAtualizada;
+	}
+
 	//EXEMPLO
 	public static void main(String[] args) throws Exception {
 		final POIUtil2 poi = new POIUtil2();
