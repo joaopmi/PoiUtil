@@ -1,7 +1,5 @@
 # PoiUtil
-Versão 2.0
-
-Crie excel (XSSF | .xlsx) passando Strings como localizações das células. Ex: "A1","AF:B3"
+Versão 2.1 30/06/2020
 
 Feito com base no Apache POI 3.17.
 Alguns comentários podem estar desatualizados ou com ortografia errada devido às constantes alterações.
