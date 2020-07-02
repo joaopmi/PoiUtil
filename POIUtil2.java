@@ -33,7 +33,6 @@ import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
@@ -42,7 +41,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
- * Versão 2.1 de POIUtil. Data: 30/06/2020
+ * Versão 2.1 de POIUtil. Data: 02/07/2020
  * Exemplo de uso no main
  * 
  * https://github.com/joaopmi/PoiUtil
@@ -430,6 +429,28 @@ public class POIUtil2 implements Serializable {
 		return this;
 	}
 	
+	/**
+	 * Cria célula, seta valor Date e configura estilo 
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param estilo (String) - nome do estilo existente
+	 * @param value (Date) - valor em Date
+	 * @param row   (int) - número da linha onde serão criadas as células. Base 0
+	 * @param cells (int[]) - números das células a serem criadas. Base 0
+	 * @throws NullPointerException - caso linha ou estilo não existam
+	 * @return PoiUtil2
+	 */
+	public POIUtil2 createCell(final XSSFSheet sheet, final String estilo, final Date value, final int row, final int cellNum) {
+		final XSSFCell cell = this.getRow(sheet, row).createCell(cellNum);
+		cell.setCellStyle(getCellStyle(estilo));
+		if(null == value) {
+			cell.setCellValue("");
+		}else {
+			cell.setCellValue(value);
+		}
+		setUltimaRegiaoAutalizadaLinhaColuna(sheet,row,cellNum);
+		return this;
+	}
 	
 	/**
 	 * Cria célula e seta valor int
@@ -499,6 +520,25 @@ public class POIUtil2 implements Serializable {
 			}
 		}
 		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
+		return this;
+	}
+	
+	
+	/**
+	 * Cria células
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param row (int) - número da linha
+	 * @param cols (int[]) - números das células a serem criadas
+	 * @throws NullPointerException - caso linha não exista
+	 * @return PoiUtil
+	 */
+	public POIUtil2 createCells(final XSSFSheet sheet, final int row, final int[] cols) throws Exception {
+		final XSSFRow xssfRow = getRow(sheet, row);
+		int index = 0;
+		while(index < cols.length) {
+			xssfRow.createCell(cols[index++]);
+		}
 		return this;
 	}
 	
@@ -837,6 +877,11 @@ public class POIUtil2 implements Serializable {
 	public String getCellCreatedString(final XSSFSheet sheet, final int linha, final int coluna){
 		return sheet.getRow(linha).getCell(coluna).getAddress().formatAsString();
 	}
+	
+	public POIUtil2 editCellDataFormat(final XSSFCell cell, final String format) {
+		cell.getCellStyle().setDataFormat(getDataFormat(format));
+		return this;
+	}
 
 	// ROW
 
@@ -941,6 +986,16 @@ public class POIUtil2 implements Serializable {
 			}
 			editCellStyleBorder(name, allBorder[0], allBorder[1], allBorder[2], allBorder[3]);
 		}
+		return this;
+	}
+	
+	/**
+	 * Apaga o estilo criado. Não afeta as células criadas com o estilo passado.
+	 * @param name (String) - nome do estilo
+	 * @return POIUtil2
+	 */
+	public POIUtil2 removeCellStyle(final String name) {
+		this._cellStyles.remove(name);
 		return this;
 	}
 
@@ -1141,6 +1196,20 @@ public class POIUtil2 implements Serializable {
 	}
 	
 	/**
+	 * Configura padrão de preenchimento do estilo da célula
+	 * 
+	 * @param cell (XSSFCell) - célula a ser alterada
+	 * @param fillPattern   (FillPatternType) - padrão de preenchimento
+	 * @return PoiUtil
+	 */
+	public POIUtil2 editCellStyleFillPattern(final XSSFCell cell, final FillPatternType fillPattern) {
+		final XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle().clone();
+		style.setFillPattern(fillPattern);
+		cell.setCellStyle(style);
+		return this;
+	}
+	
+	/**
 	 * Configura cor de fundo do estilo
 	 * @param cellStyleName (String) - nome chave da fonte no HashMap
 	 * @param color (IndexedColors) - cor de fundo
@@ -1165,17 +1234,17 @@ public class POIUtil2 implements Serializable {
 		}
 		return this;
 	}
-
+	
 	/**
-	 * Configura um formato de valor para o estilo. Ex: R$0.00
-	 * 
-	 * @param cellStyleName (String) - nome chave da fonte no HashMap
-	 * @param format        (String) - formato de valor
+	 * Configura cor de fundo do etilo da célula
+	 * @param cell (XSSFCell) - célula a ser alterada
+	 * @param color (Color) - cor de fundo
 	 * @return PoiUtil
 	 */
-	public POIUtil2 editCellStyleFormatValue(final String cellStyleName, final String format) {
-		final XSSFCreationHelper helper = this._workbook.getCreationHelper();
-		this.getCellStyle(cellStyleName).setDataFormat(helper.createDataFormat().getFormat(format));
+	public POIUtil2 editCellStyleForegroundColor(final XSSFCell cell, final Color color) {
+		final XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle().clone();
+		style.setFillForegroundColor(new XSSFColor(color));
+		cell.setCellStyle(style);
 		return this;
 	}
 
@@ -1213,6 +1282,37 @@ public class POIUtil2 implements Serializable {
 			}
 		}
 		setUltimaRegiaoAutalizada(sheet,celulasRegioes);
+		return this;
+	}
+	
+	/**
+	 * Cria linha e célula
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param row (int) - número da linha a ser criada. (base 0)
+	 * @param col (int) - número da coluna a ser criada. (base 0)
+	 * @return PoiUtil
+	 */
+	public POIUtil2 createRowCell(final XSSFSheet sheet, final int row, final int col) throws Exception{
+		sheet.createRow(row).createCell(col);
+		return this;
+	}
+	
+	
+	/**
+	 * Cria linha e células
+	 * 
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param row (int) - número da linha a ser criada. (base 0)
+	 * @param cols (int[]) - array de colunas a serem criadas. (base 0)
+	 * @return PoiUtil
+	 */
+	public POIUtil2 createRowCells(final XSSFSheet sheet, final int row, final int[] cols) throws Exception{
+		final XSSFRow xssfRow = sheet.createRow(row);
+		int index = 0;
+		while(index < cols.length) {
+			xssfRow.createCell(cols[index++]);
+		}
 		return this;
 	}
 
@@ -1338,7 +1438,37 @@ public class POIUtil2 implements Serializable {
 		final XSSFFont font = copyFont(style.getFont());
 		font.setBold(bold);
 		style.setFont(font);
+		cell.setCellStyle(style);
 		return this;
+	}
+	
+	/**
+	 * Configura tamanho da fonte da célula
+	 * 
+	 * @param cell (XSSFCell) - célula com estilo a ser configurado
+	 * @param size (double) - altura da fonte em double
+	 * @return PoiUtil
+	 */
+	public POIUtil2 editFontSize(final XSSFCell cell, final double size) {
+		final XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle().clone();
+		final XSSFFont font = copyFont(style.getFont());
+		font.setFontHeight(size);
+		style.setFont(font);
+		cell.setCellStyle(style);
+		return this;
+	}
+	
+	/**
+	 * Configura tamanho da fonte da célula
+	 * @param sheet (XSSFSheet) - folha a ser alterada
+	 * @param row (int) - número da linha
+	 * @param col (int) - número da coluna
+	 * @param size (double) - altura da fonte em double
+	 * @return
+	 */
+	public POIUtil2 editFontSize(final XSSFSheet sheet, final int row, final int col, final double size) {
+		final XSSFCell cell = sheet.getRow(row).getCell(col);
+		return editFontSize(cell, size);
 	}
 	
 	/**
@@ -1568,39 +1698,33 @@ public class POIUtil2 implements Serializable {
 	/**
 	 * Cria fórmula de soma para a célula. ATENÇÃO: o tipo da célula será alterado para CELL_TYPE_FORMULA
 	 * @param cell (XSSFCell) - célula a ser alterada
-	 * @param evaluate (boolean) - configura se a fórmula será executada após sua criação
 	 * @param formula (String) - fórmula String (em inglês). Ex: SUM(A1:B1).
 	 * @return POIUtil2
 	 */
-	public POIUtil2 createCellFormula(final XSSFCell cell, final boolean evaluate,final String formula) {
+	public POIUtil2 createCellFormula(final XSSFCell cell, final String formula) {
 		cell.setCellType(CellType.FORMULA);
 		cell.setCellFormula(formula);
-		if(evaluate) {
-			this._workbook.getCreationHelper().createFormulaEvaluator().evaluate(cell);
-		}
 		return this;
 	}
 	
 	/**
 	 * Cria fórmula de SOMA para a célula. ATENÇÃO: o tipo da célula será alterado para CELL_TYPE_FORMULA
 	 * @param cell (XSSFCell) - célula a ser alterada
-	 * @param evaluate (boolean) - configura se a fórmula será executada após sua criação
 	 * @param formula (String) - região a ser somada. Ex: A1:B1
 	 * @return POIUtil2
 	 */
-	public POIUtil2 sum(final XSSFCell cell, final boolean evaluate,final String regiao) {
-		return createCellFormula(cell, evaluate,"SUM("+regiao+")");
+	public POIUtil2 sum(final XSSFCell cell, final String regiao) {
+		return createCellFormula(cell, "SUM("+regiao+")");
 	}
 	
 	
 	/**
 	 * Cria fórmula de CONT.SES para a célula. ATENÇÃO: o tipo da célula será alterado para CELL_TYPE_FORMULA
 	 * @param cell (XSSFCell) - célula a ser alterada
-	 * @param evaluate (boolean) - configura se a fórmula será executada após sua criação
 	 * @param regiaoCriterio (String...) - array String contendo a região e o critério da função CONT.SES. Deve ser passado em pares. Ex: "A1:B1","VERDADEIRO","A3","FALSO"...
 	 * @return POIUtil2
 	 */
-	public POIUtil2 countIfs(final XSSFCell cell, final boolean evaluate,final String... regiaoCriterio) {
+	public POIUtil2 countIfs(final XSSFCell cell,final String... regiaoCriterio) {
 		final StringBuilder contSe = new StringBuilder(32);
 		final String virgula = ",";
 		contSe.append("COUNTIFS(");
@@ -1612,7 +1736,7 @@ public class POIUtil2 implements Serializable {
 			}
 		}
 		contSe.append(")");
-		return createCellFormula(cell, evaluate,contSe.toString());
+		return createCellFormula(cell,contSe.toString());
 	}
 	
 	/**
